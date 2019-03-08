@@ -363,11 +363,9 @@
 </body>
 <script>
 
-
+    var basepath = location.protocol + '//' + location.host+ '/';
 
     var usersList = [];
-
-    var basepath = "http://localhost:8082/";
 
     function getAllUsers() {
         $.ajax({
@@ -538,6 +536,7 @@
     });
 
     $(document).ready(function(){
+        console.log(basepath);
         getAllUsers();
     });
 
