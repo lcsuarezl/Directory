@@ -46,7 +46,6 @@ public class DirectoryApplicationTests {
 	public void createUser() throws  Exception{
 		User user = new User("Maria", "Stella", "marilosi@gmail.com");
 
-
 		given(userService.create(any(User.class))).willReturn(user);
 
 		String res = mockMvc.perform(post("/user")

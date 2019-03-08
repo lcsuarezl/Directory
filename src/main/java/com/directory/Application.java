@@ -28,6 +28,9 @@ public class Application {
 
     }
 
+    /**
+     * Load sample data to application
+     */
     @PostConstruct
     private void runner() {
         ObjectMapper mapper = new ObjectMapper();

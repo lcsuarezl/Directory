@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import com.directory.model.User;
 import com.directory.repository.UserRepository;
 
+/**
+ * Rest controller, allow POST, PUT, GET and DELETE operations
+ */
 @RestController
 @RequestMapping()
 public class UserController {
