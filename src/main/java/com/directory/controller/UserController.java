@@ -1,81 +1,72 @@
 package com.directory.controller;
 
+import java.util.*;
+
 import javax.validation.Valid;
 
+import com.directory.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import com.directory.model.User;
 import com.directory.repository.UserRepository;
 
-@Controller
+@RestController
+@RequestMapping()
 public class UserController {
 	
     private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
 
-	
 	@Autowired
-	UserRepository userRepository;
-     
-    @GetMapping("/signup")
-    public String showSignUpForm(User user) {
-        return "user-add";
-    }
-    
-    @GetMapping("/index")
-    public String showV2(User user) {
-        return "index";
-    }
-     
-    @PostMapping("/adduser")
-    public String addUser(@Valid User user, BindingResult result, Model model) {
+    UserService userService;
+
+
+    @PostMapping("/user")
+    public ResponseEntity addUser(@RequestBody @Valid User user) {
     	LOGGER.info("start addUser for "+user.toString());
-        if (result.hasErrors()) {
-            return "user-add";
+    	try {
+            return new ResponseEntity(userService.create(user), HttpStatus.OK);
+        } catch(Exception e){
+            return new ResponseEntity(e,  HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        userRepository.save(user);
-        model.addAttribute("users", userRepository.findAll());
-        return "index";
     }
  
-    @GetMapping("/edit/{id}")
-    public String showUpdateForm(@PathVariable("id") long id, Model model) {
-    	LOGGER.info("start showUpdateForm for id "+ id);
-        User user = userRepository.findById(id)
-          .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        LOGGER.info(user.toString());
-        model.addAttribute("user", user);
-        return "user-update";
+    @GetMapping("/user/{id}")
+    public ResponseEntity getUser(@PathVariable("id") long id) {
+    	LOGGER.info("start getUser for id "+ id);
+        Optional<User> user = userService.getById(id);
+        return  user.isPresent() ? new ResponseEntity(user.get(), HttpStatus.OK): new ResponseEntity(HttpStatus.NOT_FOUND);
     }
     
-    @PostMapping("/update/{id}")
-    public String updateUser(@PathVariable("id") long id, @Valid User user, 
-      BindingResult result, Model model) {
+    @PutMapping("/user/{id}")
+    public ResponseEntity updateUser(@PathVariable("id") long id, @RequestBody @Valid User user) {
     	LOGGER.info("start updateUser for id "+ id);
-        if (result.hasErrors()) {
-            user.setId(id);
-            return "user-update";
+    	user.setId(id);
+        try {
+            return new ResponseEntity(userService.update(user), HttpStatus.OK);
+        } catch(Exception e){
+            return new ResponseEntity(e.getMessage(),  HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        
-        userRepository.save(user);
-        model.addAttribute("users", userRepository.findAll());
-        return "index";
     }
          
-    @GetMapping("/delete/{id}")
-    public String deleteUser(@PathVariable("id") long id, Model model) {
+    @DeleteMapping("user/{id}")
+    public ResponseEntity deleteUser(@PathVariable("id") long id) {
     	LOGGER.info("start deleteUser for id "+ id);
-        User user = userRepository.findById(id)
-          .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        userRepository.delete(user);
-        model.addAttribute("users", userRepository.findAll());
-        return "index";
+    	return new ResponseEntity((userService.delete(id)?HttpStatus.OK :HttpStatus.NOT_FOUND));
     }
+    
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> findAll(){
+        LOGGER.info("start findAll");
+        List<User> users = userService.getAll();
+    	HttpStatus httpStatus = (users.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    	ResponseEntity responseEntity = new ResponseEntity(users, httpStatus);
+    	return responseEntity;
+    }
+    
 }
